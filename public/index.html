@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Autenticación</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f0f0f0;
+    }
+    .container {
+      text-align: center;
+      padding: 20px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    form {
+      margin-bottom: 20px;
+    }
+    input {
+      padding: 8px;
+      margin: 5px;
+      width: 200px;
+    }
+    button {
+      padding: 8px 16px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .links {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+    a {
+      text-decoration: none;
+      color: #007bff;
+      font-weight: bold;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    #message {
+      margin-top: 10px;
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <form id="loginForm">
+      <div>
+        <input type="text" id="username" placeholder="Usuario" required>
+      </div>
+      <div>
+        <input type="password" id="password" placeholder="Contraseña" required>
+      </div>
+      <button type="submit">Iniciar Sesión</button>
+    </form>
+    <div id="message"></div>
+    <div class="links">
+      <a href="/abierto" onclick="fetchPublic()">Ruta Abierta</a>
+      <a href="/cerrado" onclick="fetchProtected(event)">Ruta Cerrada</a>
+    </div>
+  </div>
+
+  <script>
+    // Manejar el envío del formulario
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const messageDiv = document.getElementById('message');
+
+      try {
+        const response = await fetch('/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+          localStorage.setItem('token', data.token);
+          messageDiv.style.color = 'green';
+          messageDiv.textContent = 'Inicio de sesión exitoso. Token guardado.';
+        } else {
+          messageDiv.textContent = data.message || 'Error al iniciar sesión';
+        }
+      } catch (error) {
+        messageDiv.textContent = 'Error de conexión';
+      }
+    });
+
+    // Función para la ruta pública
+    async function fetchPublic() {
+      try {
+        const response = await fetch('/abierto');
+        const data = await response.json();
+        alert(data.message);
+      } catch (error) {
+        alert('Error al acceder a la ruta pública');
+      }
+    }
+
+    // Función para la ruta protegida
+    async function fetchProtected(event) {
+      event.preventDefault(); // Evitar la navegación directa
+      const token = localStorage.getItem('token');
+      try {
+        const response = await fetch('/cerrado', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        const data = await response.json();
+        alert(data.message);
+      } catch (error) {
+        alert('Error al acceder a la ruta protegida');
+      }
+    }
+  </script>
+</body>
+</html>
