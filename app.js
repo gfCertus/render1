@@ -51,11 +51,9 @@ app.post('/login', async (req, res) => {
   const { username, password } = req.body;
 console.log(req.body.username);
 // 0.- Obtener la IP del cliente
-  const clientIp = req.ip || // IP directa
-                    req.socket.remoteAddress || // Dirección remota de la conexión
-                    req.socket.remoteAddress || // Dirección remota del socket
-                    req.headers['x-forwarded-for']; // Para proxies o balanceadores
-// Limpiar formato IPv6 si es necesario
+  let clientIp = req.headers['x-forwarded-for'] || req.ip || req.socket.remoteAddress;
+
+  // Limpiar formato IPv6 si es necesario
   if (clientIp && clientIp.startsWith('::ffff:')) {
     clientIp = clientIp.replace('::ffff:', '');
   }
@@ -64,6 +62,9 @@ console.log(req.body.username);
     console.error('No se pudo obtener la IP del cliente');
     return res.status(500).json({ error: 'No se pudo obtener la IP' });
   }
+
+  console.log(`Solicitud desde IP: ${clientIp}, Usuario: ${username}`);
+
 console.log(`Solicitud desde IP: ${clientIp} Usuario: ${username}, Password: ${password}`);
   // 1. Buscar al usuario en la base de datos (simulada)
   const user = users.find(u => u.username === username);
