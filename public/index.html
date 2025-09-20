@@ -37,6 +37,7 @@
       border: none;
       border-radius: 4px;
       cursor: pointer;
+      margin: 5px;
     }
     button:hover {
       background-color: #0056b3;
@@ -54,9 +55,18 @@
     a:hover {
       text-decoration: underline;
     }
-    #message {
+    #message, #tokenDebug {
       margin-top: 10px;
       color: red;
+    }
+    #message.success {
+      color: green;
+    }
+    #logout {
+      background-color: #dc3545;
+    }
+    #logout:hover {
+      background-color: #c82333;
     }
   </style>
 </head>
@@ -70,15 +80,29 @@
         <input type="password" id="password" placeholder="Contraseña" required>
       </div>
       <button type="submit">Iniciar Sesión</button>
+      <button type="button" id="logout" style="display: none;">Cerrar Sesión</button>
     </form>
     <div id="message"></div>
+    <div id="tokenDebug"></div>
     <div class="links">
-      <a href="/abierto" onclick="fetchPublic()">Ruta Abierta</a>
-      <a href="/cerrado" onclick="fetchProtected(event)">Ruta Cerrada</a>
+      <a href="/abierto">Ruta Abierta</a>
+      <a href="/cerrado">Ruta Cerrada</a>
     </div>
   </div>
 
   <script>
+    // Mostrar u ocultar el botón de cerrar sesión y depurar el token
+    function updateLogoutButton() {
+      const logoutButton = document.getElementById('logout');
+      const tokenDebug = document.getElementById('tokenDebug');
+      const token = localStorage.getItem('token');
+      logoutButton.style.display = token ? 'inline-block' : 'none';
+      tokenDebug.textContent = token ? `Token: ${token.slice(0, 20)}...` : 'No hay token';
+    }
+
+    // Inicializar el estado del botón
+    updateLogoutButton();
+
     // Manejar el envío del formulario
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -98,6 +122,7 @@
           localStorage.setItem('token', data.token);
           messageDiv.style.color = 'green';
           messageDiv.textContent = 'Inicio de sesión exitoso. Token guardado.';
+          updateLogoutButton();
         } else {
           messageDiv.textContent = data.message || 'Error al iniciar sesión';
         }
@@ -106,33 +131,13 @@
       }
     });
 
-    // Función para la ruta pública
-    async function fetchPublic() {
-      try {
-        const response = await fetch('/abierto');
-        const data = await response.json();
-        alert(data.message);
-      } catch (error) {
-        alert('Error al acceder a la ruta pública');
-      }
-    }
-
-    // Función para la ruta protegida
-    async function fetchProtected(event) {
-      event.preventDefault(); // Evitar la navegación directa
-      const token = localStorage.getItem('token');
-      try {
-        const response = await fetch('/cerrado', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        const data = await response.json();
-        alert(data.message);
-      } catch (error) {
-        alert('Error al acceder a la ruta protegida');
-      }
-    }
+    // Manejar el cierre de sesión
+    document.getElementById('logout').addEventListener('click', () => {
+      localStorage.removeItem('token');
+      document.getElementById('message').textContent = 'Sesión cerrada';
+      document.getElementById('message').style.color = 'blue';
+      updateLogoutButton();
+    });
   </script>
 </body>
 </html>

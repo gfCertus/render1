@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ruta Cerrada</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f0f0f0;
+    }
+    .container {
+      text-align: center;
+      padding: 20px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    a {
+      text-decoration: none;
+      color: #007bff;
+      font-weight: bold;
+      margin-top: 10px;
+      display: inline-block;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    #message {
+      color: red;
+    }
+    #message.success {
+      color: green;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Ruta Cerrada</h2>
+    <p id="message">Cargando...</p>
+    <a href="/">Volver al inicio</a>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token') || '';
+    console.log('Token enviado en la solicitud:', token ? token.slice(0, 20) + '...' : 'No token');
+
+    // Obtener el mensaje del encabezado X-Message
+    fetch('/cerrado', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+      .then(response => {
+        console.log('Estado de la respuesta:', response.status);
+        const message = response.headers.get('X-Message') || 'Error desconocido';
+        const messageDiv = document.getElementById('message');
+        messageDiv.textContent = message;
+        if (message.includes('Acceso concedido')) {
+          messageDiv.classList.add('success');
+        }
+        if (!response.ok) {
+          throw new Error('Respuesta no OK');
+        }
+      })
+      .catch(error => {
+        console.log('Error en fetch:', error.message);
+        const messageDiv = document.getElementById('message');
+        if (messageDiv.textContent === 'Cargando...') {
+          messageDiv.textContent = 'Error de conexión';
+        }
+      });
+  </script>
+</body>
+</html>
